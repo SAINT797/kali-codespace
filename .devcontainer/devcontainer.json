@@ -1,0 +1,15 @@
+{
+  "name": "Kali Desktop",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [6080],
+  "portsAttributes": {
+    "6080": {
+      "label": "Kali Desktop (noVNC)",
+      "onAutoForward": "notify"
+    }
+  },
+  "postStartCommand": "vncserver :1 -geometry 1280x720 -localhost no || true; websockify -D --web=/usr/share/novnc/ 6080 localhost:5901 || true",
+  "remoteUser": "kali"
+}
