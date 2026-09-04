@@ -1,0 +1,53 @@
+FROM kalilinux/kali-rolling
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# --- Base desktop, wallpapers, menu, tweaks tool ---
+RUN apt update && apt install -y \
+    kali-desktop-xfce \
+    kali-wallpapers-2023 \
+    kali-menu \
+    kali-tweaks \
+    tigervnc-standalone-server \
+    novnc \
+    websockify \
+    dbus-x11 \
+    sudo curl git nano wget tmux \
+    && apt clean
+
+# --- Pentest tools ---
+RUN apt update && apt install -y \
+    nmap \
+    gobuster \
+    hydra \
+    sqlmap \
+    metasploit-framework \
+    && apt clean
+
+# --- User setup ---
+RUN useradd -m -s /bin/bash kali && \
+    echo "kali ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    echo "kali:kali" | chpasswd
+
+USER kali
+WORKDIR /home/kali
+
+# --- VNC startup script (properly execs Xfce so the session doesn't die) ---
+RUN mkdir -p ~/.vnc && \
+    printf '#!/bin/bash\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec startxfce4\n' > ~/.vnc/xstartup && \
+    chmod +x ~/.vnc/xstartup
+
+# --- VNC password (change "kalivnc" if you want something else) ---
+RUN echo "kalivnc" | vncpasswd -f > ~/.vnc/passwd && \
+    chmod 600 ~/.vnc/passwd
+
+# --- Pre-apply BackTrack panel layout at build time via xfconf, so it's ready on first boot ---
+# kali-tweaks' "BackTrack" preset swaps to a single bottom panel with the classic menu.
+# We replicate it by dropping in the BackTrack panel config kali-tweaks itself uses.
+RUN mkdir -p ~/.config/xfce4/xfconf/xfce-perchannel-xml && \
+    if [ -f /usr/share/kali-defaults/xfconf/backtrack-panel.xml ]; then \
+      cp /usr/share/kali-defaults/xfconf/backtrack-panel.xml \
+         ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml; \
+    fi
+
+WORKDIR /home/kali
