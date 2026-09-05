@@ -10,6 +10,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "tmux new-session -d -s shared || true; vncserver :1 -geometry 1280x720 -localhost no || true; websockify -D --web=/usr/share/novnc/ 6080 localhost:5901 || true",
+  "postStartCommand": "tmux new-session -d -s shared || true; rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -geometry 1280x720 -localhost no || true; websockify -D --web=/usr/share/novnc/ 6080 localhost:5901 || true",
   "remoteUser": "kali"
 }
